@@ -1,5 +1,5 @@
 use unicode_segmentation::UnicodeSegmentation;
-use cpython::{Python, PyResult, py_module_initializer, py_fn, PyDict};
+use cpython::{Python, PyResult, py_module_initializer, py_fn, PyDict, PyList};
 
 
 
@@ -39,6 +39,19 @@ fn dist_word_py(_:Python, word1:&str, word2: &str) -> PyResult<u32> {
     Ok(dist_word(word1, word2) as u32)
 }
 
+//we return minimum distance
+fn dist_word_to_wordlist_py(py:Python, word:&str, wordlist: &PyList) -> PyResult<u32> {
+    let mut mindist = u32::max_value();
+    for w in wordlist.iter(py) {
+        let w = w.to_string();
+        let dist = dist_word(word, &w) as u32;
+        if  dist < mindist {
+            mindist = dist
+        }
+    }
+    Ok(mindist)
+}
+
 //This doesn't verify word is constructured of valid tamil entities. No need to. As we wouldn't
 //have any equivalent key in rules-dict for those entities
 fn unigram_auto(py:Python, word: &str, rules: &PyDict) -> PyResult<String> {
@@ -72,6 +85,7 @@ py_module_initializer!(tamilcharutils, |py, m| {
     m.add(py, "__doc__", "Module written in Rust for tamil character utils")?;
     m.add(py, "nb_valid_tamil_entities", py_fn!(py, nb_valid_tamil_entities(string: &str)))?;
     m.add(py, "dist_word", py_fn!(py, dist_word_py(word1: &str, word2: &str)))?;
+    m.add(py, "dist_word_to_wordlist", py_fn!(py, dist_word_to_wordlist_py(word1: &str, wordlist: &PyList)))?;
     m.add(py, "unigram_auto", py_fn!(py, unigram_auto(word: &str, rules: &PyDict)))?;
     Ok(())
 });
