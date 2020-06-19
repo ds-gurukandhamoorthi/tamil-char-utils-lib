@@ -1,5 +1,7 @@
 use unicode_segmentation::UnicodeSegmentation;
-use cpython::{Python, PyResult, py_module_initializer, py_fn};
+use cpython::{Python, PyResult, py_module_initializer, py_fn, PyDict};
+
+
 
 fn is_vowel(c: &str) -> bool{
     "அஆஇஈஉஊஎஏஐஒஓஔஃ".contains(c)
@@ -37,6 +39,19 @@ fn dist_word_py(_:Python, word1:&str, word2: &str) -> PyResult<u32> {
     Ok(dist_word(word1, word2) as u32)
 }
 
+//This doesn't verify word is constructured of valid tamil entities. No need to. As we wouldn't
+//have any equivalent key in rules-dict for those entities
+fn unigram_auto(py:Python, word: &str, rules: &PyDict) -> PyResult<String> {
+    let mut res = String::new();
+    for ent in word.graphemes(true) {
+        if rules.contains(py, ent).unwrap() {
+            res.push_str(&format!("{}", rules.get_item(py, ent).unwrap()))
+        } else {
+            return Ok(String::from(""))
+        }
+    }
+    Ok(res)
+}
 
 
 
@@ -57,5 +72,6 @@ py_module_initializer!(tamilcharutils, |py, m| {
     m.add(py, "__doc__", "Module written in Rust for tamil character utils")?;
     m.add(py, "nb_valid_tamil_entities", py_fn!(py, nb_valid_tamil_entities(string: &str)))?;
     m.add(py, "dist_word", py_fn!(py, dist_word_py(word1: &str, word2: &str)))?;
+    m.add(py, "unigram_auto", py_fn!(py, unigram_auto(word: &str, rules: &PyDict)))?;
     Ok(())
 });
