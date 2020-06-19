@@ -25,6 +25,17 @@ fn is_tamil_entity(e: &str) -> bool{
     is_vowel(e) || is_consonant(e) || is_marked_consonant(e)
 }
 
+//The two words in the arguments are supposed to be valid words, so we can forgo the verification
+//above `is_tamil_entity`
+fn dist_word(word1: &str, word2: &str) -> usize {
+    let ents1 = word1.graphemes(true).collect::<Vec<&str>>();
+    let ents2 = word2.graphemes(true).collect::<Vec<&str>>();
+    strsim::generic_levenshtein(&ents1, &ents2)
+}
+
+fn dist_word_py(_:Python, word1:&str, word2: &str) -> PyResult<u32> {
+    Ok(dist_word(word1, word2) as u32)
+}
 
 
 
@@ -45,5 +56,6 @@ fn nb_valid_tamil_entities(_:Python, string: &str) -> PyResult<u32> {
 py_module_initializer!(tamilcharutils, |py, m| {
     m.add(py, "__doc__", "Module written in Rust for tamil character utils")?;
     m.add(py, "nb_valid_tamil_entities", py_fn!(py, nb_valid_tamil_entities(string: &str)))?;
+    m.add(py, "dist_word", py_fn!(py, dist_word_py(word1: &str, word2: &str)))?;
     Ok(())
 });
