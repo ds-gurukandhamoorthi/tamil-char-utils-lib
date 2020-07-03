@@ -52,7 +52,7 @@ fn dist_word_to_wordlist_py(py:Python, word:&str, wordlist: &PyList) -> PyResult
     Ok(mindist)
 }
 
-//This doesn't verify word is constructured of valid tamil entities. No need to. As we wouldn't
+//This doesn't verify word is constructed of valid tamil entities. No need to. As we wouldn't
 //have any equivalent key in rules-dict for those entities
 fn unigram_auto(py:Python, word: &str, rules: &PyDict) -> PyResult<String> {
     let mut res = String::new();
@@ -81,11 +81,20 @@ fn nb_valid_tamil_entities(_:Python, string: &str) -> PyResult<u32> {
     Ok(count)
 }
 
+//No verification is done. We can use this for other languages too: cab -> abc
+fn unique_sorted_entities(_:Python, word: &str) -> PyResult<String> {
+    let mut ents = word.graphemes(true).collect::<Vec<&str>>();
+    ents.sort_unstable();
+    ents.dedup();
+    Ok(ents.join(""))
+}
+
 py_module_initializer!(tamilcharutils, |py, m| {
     m.add(py, "__doc__", "Module written in Rust for tamil character utils")?;
     m.add(py, "nb_valid_tamil_entities", py_fn!(py, nb_valid_tamil_entities(string: &str)))?;
     m.add(py, "dist_word", py_fn!(py, dist_word_py(word1: &str, word2: &str)))?;
     m.add(py, "dist_word_to_wordlist", py_fn!(py, dist_word_to_wordlist_py(word1: &str, wordlist: &PyList)))?;
     m.add(py, "unigram_auto", py_fn!(py, unigram_auto(word: &str, rules: &PyDict)))?;
+    m.add(py, "unique_sorted_entities", py_fn!(py, unique_sorted_entities(word: &str)))?;
     Ok(())
 });
