@@ -1,7 +1,12 @@
 use unicode_segmentation::UnicodeSegmentation;
-use cpython::{Python, PyResult, py_module_initializer, py_fn, PyDict, PyList};
+use cpython::{Python, PyResult, py_module_initializer, py_fn, PyDict, PyList, PyBool};
+use regex::Regex;
+use once_cell::sync::Lazy;
 
-
+static EXCLUSIVELY_TAMIL_WORD_CHARACTERS : Lazy<Regex> = Lazy::new(||{
+    // tamil letter or tamil mark
+    Regex::new(r"^([\p{Tamil}&&\pL][\p{Tamil}&&\pM]?)*$").unwrap()
+});
 
 fn is_vowel(c: &str) -> bool{
     "அஆஇஈஉஊஎஏஐஒஓஔஃ".contains(c)
@@ -35,6 +40,11 @@ fn dist_word(word1: &str, word2: &str) -> usize {
     strsim::generic_levenshtein(&ents1, &ents2)
 }
 
+// A word composed exclusively of tamil word characters
+fn is_tamil_word(word: &str) -> bool {
+    EXCLUSIVELY_TAMIL_WORD_CHARACTERS.is_match(word)
+}
+
 fn dist_word_py(_:Python, word1:&str, word2: &str) -> PyResult<u32> {
     Ok(dist_word(word1, word2) as u32)
 }
@@ -66,6 +76,10 @@ fn unigram_auto(py:Python, word: &str, rules: &PyDict) -> PyResult<String> {
     Ok(res)
 }
 
+fn is_tamil_word_py(py:Python, word: &str) -> PyResult<PyBool> {
+    let res = if is_tamil_word(word) {py.True()} else {py.False()};
+    Ok(res)
+}
 
 
 //number of entities in a word. There shouldn't be any other thing like space, ascii etc..
@@ -96,5 +110,6 @@ py_module_initializer!(tamilcharutils, |py, m| {
     m.add(py, "dist_word_to_wordlist", py_fn!(py, dist_word_to_wordlist_py(word1: &str, wordlist: &PyList)))?;
     m.add(py, "unigram_auto", py_fn!(py, unigram_auto(word: &str, rules: &PyDict)))?;
     m.add(py, "unique_sorted_entities", py_fn!(py, unique_sorted_entities(word: &str)))?;
+    m.add(py, "is_tamil_word", py_fn!(py, is_tamil_word_py(word: &str)))?;
     Ok(())
 });
