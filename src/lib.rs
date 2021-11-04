@@ -4,7 +4,7 @@ use regex::Regex;
 use once_cell::sync::Lazy;
 
 static EXCLUSIVELY_TAMIL_WORD_CHARACTERS : Lazy<Regex> = Lazy::new(||{
-    // tamil letter or tamil mark
+    // tamil letter (with an optional tamil mark)
     Regex::new(r"^([\p{Tamil}&&\pL][\p{Tamil}&&\pM]?)*$").unwrap()
 });
 
