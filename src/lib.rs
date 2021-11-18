@@ -85,14 +85,20 @@ fn is_tamil_word_py(py:Python, word: &str) -> PyResult<PyBool> {
 //number of entities in a word. There shouldn't be any other thing like space, ascii etc..
 //this functions verifies that the word is composed of valid tamil entities.
 fn nb_valid_tamil_entities(_:Python, string: &str) -> PyResult<u32> {
-    let mut count = 0_u32;
-    for ent in string.graphemes(true) {
-        match ent {
-            e if is_tamil_entity(e) => {count += 1}
-            _ => {return Ok(0)}
+    let grs = string.graphemes(true);
+    let (count_grs, only_tamil_grs) = grs.fold((0, true), |acc, g| {
+        let (count, tamil_only) = acc;
+        if is_tamil_entity(g) {
+            (count + 1, tamil_only)
+        } else {
+            (count, false)
         }
+    });
+    if only_tamil_grs {
+        Ok(count_grs)
+    }else {
+        Ok(0)
     }
-    Ok(count)
 }
 
 //No verification is done. We can use this for other languages too: cab -> abc
