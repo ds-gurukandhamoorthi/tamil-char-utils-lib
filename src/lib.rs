@@ -1,3 +1,7 @@
+#![allow(
+    clippy::manual_strip
+)]
+
 use unicode_segmentation::UnicodeSegmentation;
 use cpython::{Python, PyResult, py_module_initializer, py_fn, PyDict, PyList, PyBool};
 use regex::Regex;
@@ -22,8 +26,8 @@ fn is_mark(c: &str) -> bool{
 }
 
 fn is_marked_consonant(en: &str) -> bool {
-    en.starts_with(|c| is_consonant(&format!("{}", c))) &&
-    en.ends_with(|c| is_mark(&format!("{}", c)))
+    en.starts_with(|c| is_consonant(&format!("{c}"))) &&
+    en.ends_with(|c| is_mark(&format!("{c}")))
     //FIXME: two marks riding the same entity is accepted as of now.
 }
 
